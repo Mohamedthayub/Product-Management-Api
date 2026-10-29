@@ -5,11 +5,15 @@ const  app = express();
 
 connectDatabase();
 
-
+app.use((req,res,next) => {
+    console.log(req.method, req.originalUrl);
+    next();
+});
 app.use(express.json());
 
 
 app.use('/api/v1/products', productRoutes);
-app.listen(4000, () => {
+app.listen(2000, () => {
     console.log('http://localhost:4000');
 });
+ 
