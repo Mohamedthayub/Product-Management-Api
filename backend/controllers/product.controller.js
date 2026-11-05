@@ -23,7 +23,22 @@ exports.createProduct =async (req, res, next) => {
 
 exports.getProducts = async (req, res, next) => {
     try{
-        const products = await productModel.find();
+        // const products = await productModel.find();
+        // res.status(200).json({
+        //     success:true,
+        //     products
+        // });
+        // const {category} = req.query;
+        // const filter = {};
+        // if(category){
+        //     filter.category = {
+        //         $regex:category,
+        //         $options:"i"
+        //     };
+        // }
+        const {sort} = req.query;
+        const products =  await  productModel.find().sort(sort); // sort the price in ascending order ;
+        // const  products = await productModel.find(filter);
         res.status(200).json({
             success:true,
             products
@@ -33,6 +48,7 @@ exports.getProducts = async (req, res, next) => {
         next(error)
     }
 };
+
 exports.getProductById = async (req,res,next) => {
     try{
         const product = await productModel.findById(req.params.id);
@@ -45,6 +61,19 @@ exports.getProductById = async (req,res,next) => {
         res.status(200).json({
             success:true,
             product
+        })
+    }
+    catch(error){
+        next(error);
+    }
+}
+
+exports.productCount = async (req,res,next) => {
+    try{
+        const productCount = await productModel.countDocuments();
+        res.status(200).json({
+            success:true,
+            productCount
         })
     }
     catch(error){

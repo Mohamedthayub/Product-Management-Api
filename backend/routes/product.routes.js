@@ -1,4 +1,3 @@
-
 const express = require('express');
 const router = express.Router();
 
@@ -9,8 +8,7 @@ const {
 
 router.route('/')
     .post(createProduct)
-    .get(getProducts);
-
+    .get(getProducts)
 router.route('/:id').get(getProductById).delete(deleteProductById).patch(updateProduct);
 
 module.exports = router;
