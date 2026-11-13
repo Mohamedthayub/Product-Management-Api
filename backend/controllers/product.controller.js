@@ -17,17 +17,13 @@ exports.createProduct =async (req, res, next) => {
         });
     }
     catch(error){
-        next(error.message);
+        next(error);
     } 
 }
 
 exports.getProducts = async (req, res, next) => {
     try{
-        // const products = await productModel.find();
-        // res.status(200).json({
-        //     success:true,
-        //     products
-        // });
+
         // const {category} = req.query;
         // const filter = {};
         // if(category){
@@ -36,19 +32,31 @@ exports.getProducts = async (req, res, next) => {
         //         $options:"i"
         //     };
         // }
-        const {sort} = req.query;
-        const products =  await  productModel.find().sort(sort); // sort the price in ascending order ;
-        // const  products = await productModel.find(filter);
-        res.status(200).json({
+        // const products = await productModel.find(filter);
+        // res.status(200).json({
+        //     success:true,
+        //     products
+        // });
+        const page = Number(req.query.page) || 1;
+        const limit = Number(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+        const paginationProducts = await productModel.find().skip(skip).limit(limit);
+        if(paginationProducts){
+            return res.status(200).json({
+                success:true,
+                paginationProducts
+            });   
+        }
+        const products = await productModel.find();
+        return res.status(200).json({
             success:true,
             products
-        });
+        });   
     }
     catch(error){
         next(error)
     }
-};
-
+}
 exports.getProductById = async (req,res,next) => {
     try{
         const product = await productModel.findById(req.params.id);
@@ -70,9 +78,10 @@ exports.getProductById = async (req,res,next) => {
 
 exports.productCount = async (req,res,next) => {
     try{
-        const productCount = await productModel.countDocuments();
-        res.status(200).json({
+        const productCount = await  productModel.countDocuments();
+        return res.status(200).json({
             success:true,
+            message:"Product Count is",
             productCount
         })
     }
@@ -83,17 +92,43 @@ exports.productCount = async (req,res,next) => {
 exports.updateProduct = async (req,res,next) => {
     try{
         const {id} = req.params;
-        const updateProduct = await  productModel.findById(id);
-        if(!updateProduct){
-            return res.status(404).json({
+        const allowFields  = [
+            'name',
+            'description',
+            'price',
+            'category',
+            'brand',
+            'stock',
+            'rating',
+            'image'
+        ]
+        const updates = {};
+        for(const field of allowFields) {
+            if(Object.hasOwn(req.body, field)){
+                updates[field] = req.body[field]
+            }
+        }
+        if(Object.keys(updates).length === 0){
+            return res.status(400).json({
                 success:false,
-                message:"Product Not Found"
+                message:'Provide at least one valid field to update'
             })
         }
-        res.status(201).json({
-            success:true,
-            updateProduct
+        const updatedProduct = await productModel.findByIdAndUpdate(id,{$set:updates},{
+            new:true,
+            runvalidators:true
         })
+        if(!updatedProduct){
+            return res.json({
+                success:false,
+                message:"Product not found"
+            })
+        }
+        return res.status(200).json({
+            success:true,
+            message:"Product updated Successfully",
+            data:updatedProduct
+        });
     }
     catch(error){
         next(error);
